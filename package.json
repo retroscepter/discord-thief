@@ -17,8 +17,7 @@
         "format": "prettier --write ."
     },
     "dependencies": {
-        "jscrypto": "^1.0.3",
-        "win32crypt": "^0.2.0"
+        "jscrypto": "^1.0.3"
     },
     "devDependencies": {
         "@types/node": "18.0.6",
@@ -29,6 +28,9 @@
         "lint-staged": "13.0.3",
         "prettier": "2.7.1",
         "typescript": "4.7.4"
+    },
+    "optionalDependencies": {
+        "win32crypt": "0.2.0"
     },
     "lint-staged": {
         "*.{js,ts,yml,yaml,json}": "prettier --write",
