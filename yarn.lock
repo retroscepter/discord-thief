@@ -1191,10 +1191,10 @@ which@^2.0.1:
   dependencies:
     isexe "^2.0.0"
 
-win32crypt@0.1.1:
-  version "0.1.1"
-  resolved "https://registry.yarnpkg.com/win32crypt/-/win32crypt-0.1.1.tgz#590d1cd4d030d7cdeedec94393ead46f6bc09e58"
-  integrity sha512-w8ce8yBGj/kbDDE7VjksPcnJt8pjiqSeO2N3PDSyzNPLAqzyQTFe4hh8x4vAbtKcIYWk+OXhzwBC0nxZFB25QA==
+win32crypt@^0.2.0:
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/win32crypt/-/win32crypt-0.2.0.tgz#17450b59b093d82547ea0d9755120bf816d5a03b"
+  integrity sha512-ToTWTaBr8NuB7H5EuDrlQis+or8PeYyBqV1rJvyvOsy+BDTVgKEhB0eD4Q1sPYwsdDNUL98zs9jCVTEAsd7tWw==
   dependencies:
     bindings "1.5.0"
     nan "2.13.2"

